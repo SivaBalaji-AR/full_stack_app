@@ -40,73 +40,73 @@ enum service_type {
 }
 
 model users {
-  id               String            @id @default(uuid()) @db.Uuid
-  phone_number     String            @unique @db.VarChar(20)
-  name             String           @db.VarChar(100) 
-  hashed_password  String            @db.Text
+  id               String           @id @default(uuid()) @db.Uuid
+  phone_number     String           @unique @db.VarChar(20)
+  name             String           @db.VarChar(100)
+  hashed_password  String           @db.Text
   role             user_role
-  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
   worker_profiles  worker_profiles?
   user_addresses   user_addresses[]
-  orders_placed    orders[]          @relation("ConsumerOrders")
-  orders_fulfilled orders[]          @relation("WorkerOrders")
+  orders_placed    orders[]         @relation("ConsumerOrders")
+  orders_fulfilled orders[]         @relation("WorkerOrders")
 }
 
 model worker_profiles {
-  user_id          String  @id @db.Uuid
-  driving_license  String? @db.Text
-  vehicle_number   String? @db.VarChar(20)
-  vehicle_rc       String? @db.Text
-  
+  user_id         String  @id @db.Uuid
+  driving_license String? @db.Text
+  vehicle_number  String? @db.VarChar(20)
+  vehicle_rc      String? @db.Text
+
   // Prisma does not natively support PostGIS GEOGRAPHY.
   // It's mapped as 'Unsupported'. You must use $queryRaw for location queries.
   current_location Unsupported("geography(Point, 4326)")?
-  
+
   // Relation
-  user             users   @relation(fields: [user_id], references: [id])
+  user users @relation(fields: [user_id], references: [id])
 }
 
 model user_addresses {
-  id             String  @id @default(uuid()) @db.Uuid
-  user_id        String  @db.Uuid
-  address_label  String? @db.VarChar(50)
-  full_address   String? @db.Text
-  
+  id            String  @id @default(uuid()) @db.Uuid
+  user_id       String  @db.Uuid
+  address_label String? @db.VarChar(50)
+  full_address  String? @db.Text
+
   // Prisma does not natively support PostGIS GEOGRAPHY.
   // It's mapped as 'Unsupported'. You must use $queryRaw for location queries.
   location_point Unsupported("geography(Point, 4326)")?
-  
+
   // Relation
-  user           users   @relation(fields: [user_id], references: [id])
+  user users @relation(fields: [user_id], references: [id])
 
   @@index([user_id])
 }
 
 model shops {
-  id       String    @id @default(uuid()) @db.Uuid
-  name     String    @db.VarChar(255)
-  address  String?   @db.Text
-  
+  id      String  @id @default(uuid()) @db.Uuid
+  name    String  @db.VarChar(255)
+  address String? @db.Text
+
   // Prisma does not natively support PostGIS GEOGRAPHY.
   // It's mapped as 'Unsupported'. You must use $queryRaw for location queries.
   location Unsupported("geography(Point, 4326)")?
-  
-  type     shop_type
-  
+
+  type shop_type
+
   // Relations
-  items    items[]
-  orders   orders[]
+  items  items[]
+  orders orders[]
 }
 
 model items {
-  id          String   @id @default(uuid()) @db.Uuid
-  shop_id     String   @db.Uuid
-  name        String   @db.VarChar(255)
-  description String?  @db.Text
-  price       Decimal  @db.Decimal(10, 2)
-  
+  id          String  @id @default(uuid()) @db.Uuid
+  shop_id     String  @db.Uuid
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+  price       Decimal @db.Decimal(10, 2)
+
   // Relations
-  shop        shops        @relation(fields: [shop_id], references: [id])
+  shop        shops         @relation(fields: [shop_id], references: [id])
   order_items order_items[]
 
   @@index([shop_id])
@@ -119,22 +119,22 @@ model orders {
   worker_id    String?      @db.Uuid
   status       order_status @default(pending)
   shop_id      String?      @db.Uuid
-  
+
   // Prisma does not natively support PostGIS GEOGRAPHY.
   // It's mapped as 'Unsupported'. You must use $queryRaw for location queries.
   start_location Unsupported("geography(Point, 4326)")?
   end_location   Unsupported("geography(Point, 4326)")?
-  
-  otp          String        @db.VarChar(6)
-  rating       Int?
-  note         String?       @db.Text
-  created_at   DateTime      @default(now()) @db.Timestamptz(6)
+
+  otp        String   @db.VarChar(6)
+  rating     Int?
+  note       String?  @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz(6)
 
   // Relations
-  consumer     users         @relation("ConsumerOrders", fields: [consumer_id], references: [id])
-  worker       users?        @relation("WorkerOrders", fields: [worker_id], references: [id])
-  shop         shops?        @relation(fields: [shop_id], references: [id])
-  order_items  order_items[]
+  consumer    users         @relation("ConsumerOrders", fields: [consumer_id], references: [id])
+  worker      users?        @relation("WorkerOrders", fields: [worker_id], references: [id])
+  shop        shops?        @relation(fields: [shop_id], references: [id])
+  order_items order_items[]
 
   @@index([consumer_id])
   @@index([worker_id])
@@ -148,8 +148,8 @@ model order_items {
   quantity Int
 
   // Relations
-  order    orders @relation(fields: [order_id], references: [id])
-  item     items  @relation(fields: [item_id], references: [id])
+  order orders @relation(fields: [order_id], references: [id])
+  item  items  @relation(fields: [item_id], references: [id])
 
   @@index([order_id])
   @@index([item_id])

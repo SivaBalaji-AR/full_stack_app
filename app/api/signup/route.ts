@@ -75,9 +75,9 @@ export async function POST(request: Request) {
                 vehicle_rc 
             } = body;
 
-            if (!driving_license) {
+            if (!driving_license || !vehicle_number || !vehicle_rc) {
                  return NextResponse.json(
-                    { error: "Full name and driving license are required for workers" },
+                    { error: "driving license, vehicle numer, vehicle rc are required for workers" },
                     { status: 400 }
                 );
             }
