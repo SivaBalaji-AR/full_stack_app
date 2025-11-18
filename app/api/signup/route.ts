@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { user_role } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
@@ -16,17 +15,18 @@ export async function POST(request: Request) {
             phone_number: string, 
             password: string, 
             name: string, 
-            role: user_role 
+            role: string // <--- Just use string here
         } = body;
 
         if (!phone_number || !password || !role || !name) {
             return NextResponse.json(
-                { error: "Phone number, password, name and role are required" },
+                { error: "Phone number, password, name, and role are required" },
                 { status: 400 } 
             );
         }
 
-        if (role !== user_role.consumer && role !== user_role.worker) {
+        // Validate using string literals
+        if (role !== 'consumer' && role !== 'worker') {
             return NextResponse.json(
                 { error: "Invalid role. Must be 'consumer' or 'worker'" },
                 { status: 400 }
@@ -53,21 +53,23 @@ export async function POST(request: Request) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        
-        if (role === user_role.consumer) {
+        // Use string literal "consumer"
+        // Prisma automatically maps string "consumer" to Enum consumer
+        if (role === 'consumer') {
             const newUser = await prisma.users.create({
                 data: {
                     phone_number: phone_number,
                     hashed_password: hashedPassword,
                     name: name,
-                    role: user_role.consumer 
+                    role: 'consumer' // <--- Pass string directly
                 },
                 select: { id: true, phone_number: true, name: true, role: true }
             });
             return NextResponse.json({ user: newUser }, { status: 201 });
         }
 
-        if (role === user_role.worker) {
+        // Use string literal "worker"
+        if (role === 'worker') {
             
             const { 
                 driving_license, 
@@ -77,7 +79,7 @@ export async function POST(request: Request) {
 
             if (!driving_license || !vehicle_number || !vehicle_rc) {
                  return NextResponse.json(
-                    { error: "driving license, vehicle numer, vehicle rc are required for workers" },
+                    { error: "Driving license, vehicle number, and vehicle RC are required for workers" },
                     { status: 400 }
                 );
             }
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
                     phone_number: phone_number,
                     hashed_password: hashedPassword,
                     name: name,
-                    role: user_role.worker, 
+                    role: 'worker', // <--- Pass string directly
                     
                     worker_profiles: {
                         create: {

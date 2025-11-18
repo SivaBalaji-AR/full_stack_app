@@ -1,7 +1,5 @@
 import { PrismaClient } from '@/lib/generated/prisma/client';
 
-export * from '@/lib/generated/prisma/enums';
-
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
