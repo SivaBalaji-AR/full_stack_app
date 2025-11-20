@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/radio-group";
 
 export default function SignupPage() {
-  const router = useRouter();
+  const {login} = useAuth();
   const [role, setRole] = useState("consumer");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -28,6 +28,9 @@ export default function SignupPage() {
   const [drivingLicense, setDrivingLicense] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleRC, setVehicleRC] = useState("");
+  const [shopName, setShopName] = useState("");
+  const [shopAddress, setShopAddress] = useState("");
+  const [shopType, setShopType] = useState("grocery");
 
   const handleSignUp = async () => {
     if(!name || !phone || !password) {
@@ -51,6 +54,16 @@ export default function SignupPage() {
       payload.vehicle_rc = vehicleRC;
     }
 
+    if (role === "shop_admin") {
+      if(!shopName || !shopType) {
+        alert("Please fill all the shop admin details");
+        return;
+      }
+      payload.shop_name = shopName;
+      payload.shop_address = shopAddress;
+      payload.shop_type = shopType;
+    }
+
     try {
       const response = await fetch("/api/signup", {
         method: "POST",
@@ -66,7 +79,8 @@ export default function SignupPage() {
         throw new Error(data.error || "Something went wrong!");
       }
       console.log("Signup successful:", data);
-      router.push("/login");
+      login(data.token);
+
     } catch (error: any) {
       console.error("Signup error:", error.message);
     }
@@ -99,6 +113,10 @@ export default function SignupPage() {
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="worker" id="worker" />
                     <Label htmlFor="worker">Worker</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="shop_admin" id="shop_admin" />
+                    <Label htmlFor="shop_admin">Shop Admin</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -136,8 +154,6 @@ export default function SignupPage() {
                   />
               </div>
 
-              {/* ----- CONDITIONAL WORKER FIELDS ----- */}
-              {/* These fields only appear if the 'worker' role is selected */}
               {role === "worker" && (
                 <>
                   <div className="flex flex-col space-y-1.5">
@@ -166,6 +182,50 @@ export default function SignupPage() {
                       value = {vehicleRC}
                       onChange={(e) => setVehicleRC(e.target.value)}
                       />
+                  </div>
+                </>
+              )}
+
+              {role === "shop_admin" && (
+                <>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="shop_name">Shop Name</Label>
+                    <Input
+                      id="shop_name"
+                      placeholder="Your Shop Name"
+                      value={shopName}
+                      onChange={(e) => setShopName(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="shop_address">Shop Address</Label>
+                    <Input
+                      id="shop_address"
+                      placeholder="Shop Address"
+                      value={shopAddress}
+                      onChange={(e) => setShopAddress(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="shop_type">Shop Type</Label>
+                    <RadioGroup
+                      value={shopType}
+                      onValueChange={setShopType}
+                      className="flex space-x-4 pt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="grocery" id="grocery" />
+                        <Label htmlFor="grocery">grocery</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="stationary" id="stationary" />
+                        <Label htmlFor="stationary">stationary</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="restaurant" id="restaurant" />
+                        <Label htmlFor="restaurant">restaurant</Label>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </>
               )}

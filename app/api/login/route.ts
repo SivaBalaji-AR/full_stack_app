@@ -56,11 +56,6 @@ export async function POST(request: Request) {
 
         return NextResponse.json(
             { 
-                user: {
-                    id: user.id,
-                    phone_number: user.phone_number,
-                    role: user.role 
-                },
                 token: token 
             },
             { status: 200 }

@@ -20,6 +20,7 @@ enum user_role {
   admin
   consumer
   worker
+  shop_admin
 }
 
 enum shop_type {
@@ -42,101 +43,117 @@ enum service_type {
 }
 
 model users {
-  id               String           @id @default(uuid()) @db.Uuid
-  phone_number     String           @unique @db.VarChar(20)
-  name             String           @db.VarChar(100)
-  hashed_password  String           @db.Text
+  id               String            @id @default(uuid()) @db.Uuid
+  phone_number     String            @unique @db.VarChar(20)
+  name             String            @db.VarChar(100)
+  hashed_password  String            @db.Text
   role             user_role
-  created_at       DateTime         @default(now()) @db.Timestamptz(6)
-  worker_profiles  worker_profiles?
+  
+  otp              String?           @db.VarChar(6)
+  otp_expires_at   DateTime?         @db.Timestamptz(6)
+  
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime          @updatedAt @db.Timestamptz(6)
+  
+  worker_profile   worker_profiles?
   user_addresses   user_addresses[]
-  orders_placed    orders[]         @relation("ConsumerOrders")
-  orders_fulfilled orders[]         @relation("WorkerOrders")
+  shops_managed    shops[]           @relation("ShopAdmin")
+  orders_placed    orders[]          @relation("ConsumerOrders")
+  orders_fulfilled orders[]          @relation("WorkerOrders")
+  
+  ratings_given    ratings[]         @relation("Rater")
+  ratings_received ratings[]         @relation("RatedDriver")
 }
 
 model worker_profiles {
-  user_id         String  @id @db.Uuid
-  driving_license String? @db.Text
-  vehicle_number  String? @db.VarChar(20)
-  vehicle_rc      String? @db.Text
-
-  // Prisma does not natively support PostGIS GEOGRAPHY.
-  // It's mapped as 'Unsupported'. You must use $queryRaw for location queries.
+  user_id          String  @id @db.Uuid
+  driving_license  String? @db.Text
+  vehicle_number   String? @db.VarChar(20)
+  vehicle_rc       String? @db.Text
+  
   current_location Unsupported("geography(Point, 4326)")?
-
-  // Relation
-  user users @relation(fields: [user_id], references: [id])
+  
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @updatedAt @db.Timestamptz(6)
+  
+  user             users   @relation(fields: [user_id], references: [id])
 }
 
 model user_addresses {
-  id            String  @id @default(uuid()) @db.Uuid
-  user_id       String  @db.Uuid
-  address_label String? @db.VarChar(50)
-  full_address  String? @db.Text
-
-  // Prisma does not natively support PostGIS GEOGRAPHY.
-  // It's mapped as 'Unsupported'. You must use $queryRaw for location queries.
+  id             String  @id @default(uuid()) @db.Uuid
+  user_id        String  @db.Uuid
+  address_label  String? @db.VarChar(50)
+  full_address   String? @db.Text
   location_point Unsupported("geography(Point, 4326)")?
 
-  // Relation
-  user users @relation(fields: [user_id], references: [id])
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @updatedAt @db.Timestamptz(6)
+  
+  user           users   @relation(fields: [user_id], references: [id])
 
   @@index([user_id])
 }
 
 model shops {
-  id      String  @id @default(uuid()) @db.Uuid
-  name    String  @db.VarChar(255)
-  address String? @db.Text
-
-  // Prisma does not natively support PostGIS GEOGRAPHY.
-  // It's mapped as 'Unsupported'. You must use $queryRaw for location queries.
+  id       String    @id @default(uuid()) @db.Uuid
+  name     String    @db.VarChar(255)
+  address  String?   @db.Text
+  
   location Unsupported("geography(Point, 4326)")?
 
   type shop_type
 
-  // Relations
-  items  items[]
-  orders orders[]
+  admin_id String @db.Uuid
+  admin    users  @relation("ShopAdmin", fields: [admin_id], references: [id])
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  items            items[]
+  orders           orders[]
+  ratings_received ratings[] 
+
+  @@index([admin_id])
 }
 
 model items {
-  id          String  @id @default(uuid()) @db.Uuid
-  shop_id     String  @db.Uuid
-  name        String  @db.VarChar(255)
-  description String? @db.Text
-  price       Decimal @db.Decimal(10, 2)
-
-  // Relations
-  shop        shops         @relation(fields: [shop_id], references: [id])
-  order_items order_items[]
+  id          String   @id @default(uuid()) @db.Uuid
+  shop_id     String   @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2) 
+  
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+  
+  shop             shops       @relation(fields: [shop_id], references: [id])
+  order_items      order_items[]
+  ratings_received ratings[]   
 
   @@index([shop_id])
 }
 
 model orders {
-  id           String       @id @default(uuid()) @db.Uuid
-  service_type service_type
-  consumer_id  String       @db.Uuid
-  worker_id    String?      @db.Uuid
-  status       order_status @default(pending)
-  shop_id      String?      @db.Uuid
-
-  // Prisma does not natively support PostGIS GEOGRAPHY.
-  // It's mapped as 'Unsupported'. You must use $queryRaw for location queries.
+  id             String         @id @default(uuid()) @db.Uuid
+  service_type   service_type
+  consumer_id    String         @db.Uuid
+  worker_id      String?        @db.Uuid
+  shop_id        String?        @db.Uuid
+  status         order_status   @default(pending)
+  
   start_location Unsupported("geography(Point, 4326)")?
   end_location   Unsupported("geography(Point, 4326)")?
 
-  otp        String   @db.VarChar(6)
-  rating     Int?
-  note       String?  @db.Text
-  created_at DateTime @default(now()) @db.Timestamptz(6)
+  otp            String         @db.VarChar(6)
+  note           String?        @db.Text
+  created_at     DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime       @updatedAt @db.Timestamptz(6)
 
-  // Relations
-  consumer    users         @relation("ConsumerOrders", fields: [consumer_id], references: [id])
-  worker      users?        @relation("WorkerOrders", fields: [worker_id], references: [id])
-  shop        shops?        @relation(fields: [shop_id], references: [id])
-  order_items order_items[]
+  consumer     users          @relation("ConsumerOrders", fields: [consumer_id], references: [id])
+  worker       users?         @relation("WorkerOrders", fields: [worker_id], references: [id])
+  shop         shops?         @relation(fields: [shop_id], references: [id])
+  order_items  order_items[]
+  ratings      ratings[]
 
   @@index([consumer_id])
   @@index([worker_id])
@@ -149,10 +166,39 @@ model order_items {
   item_id  String @db.Uuid
   quantity Int
 
-  // Relations
-  order orders @relation(fields: [order_id], references: [id])
-  item  items  @relation(fields: [item_id], references: [id])
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  order    orders @relation(fields: [order_id], references: [id])
+  item     items  @relation(fields: [item_id], references: [id])
 
   @@index([order_id])
+  @@index([item_id])
+}
+
+model ratings {
+  id          String   @id @default(uuid()) @db.Uuid
+  rater_id    String   @db.Uuid
+  order_id    String?  @db.Uuid
+  
+  driver_id   String?  @db.Uuid
+  shop_id     String?  @db.Uuid
+  item_id     String?  @db.Uuid
+  
+  score       Decimal    @db.Decimal(2, 1)
+  comment     String?  @db.Text
+  
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+
+  rater       users    @relation("Rater", fields: [rater_id], references: [id])
+  order       orders?  @relation(fields: [order_id], references: [id])
+  
+  driver      users?   @relation("RatedDriver", fields: [driver_id], references: [id])
+  shop        shops?   @relation(fields: [shop_id], references: [id])
+  item        items?   @relation(fields: [item_id], references: [id])
+
+  @@index([driver_id])
+  @@index([shop_id])
   @@index([item_id])
 }

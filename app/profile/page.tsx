@@ -27,6 +27,17 @@ interface ProfileData {
     vehicle_number?: string | null;
     vehicle_rc?: string | null;
   } | null;
+  orders_fulfilled?: {
+    id: string;
+    status: string;
+    service_type: string;
+  }[] | null;
+  shops_managed?: {
+    id: string;
+    name: string;
+    type: string;
+    address: string;
+  }[] | null;
   user_addresses?: {
     id: string;
     address_label?: string | null;
@@ -132,6 +143,53 @@ export default function ProfilePage() {
                 <p className="font-medium text-muted-foreground">Vehicle RC</p>
                 <p className="truncate">{profile.worker_profile?.vehicle_rc || "N/A"}</p>
               </div>
+            </div>
+          </CardContent>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-lg">Orders Taken</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {profile.orders_fulfilled && profile.orders_fulfilled.length > 0 ? (
+                profile.orders_fulfilled.map((order) => (
+                  <div key={order.id} className="mb-2">
+                    <p className="font-medium text-muted-foreground">Order ID: {order.id}</p>
+                    <p>Status: {order.status}</p>
+                    <p>Service Type: {order.service_type}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground italic">No orders fulfilled yet.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {profile.role === "shop_admin" && profile.shops_managed && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-lg">Shop Details</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {profile.shops_managed && profile.shops_managed.length > 0 ? (
+                profile.shops_managed.map((shop) => (
+                  <div key={shop.id} className="mb-2">
+                    <p className="font-medium text-muted-foreground">Shop Name: {shop.name}</p>
+                    <p>Type: {shop.type}</p>
+                    <p className="truncate">Address: {shop.address}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground italic">No shops managed yet.</p>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose'; // We use 'jose' because 'jsonwebtoken' doesn't work in Edge Middleware
 
 // Define paths that require authentication
-const protectedPaths = ['/dashboard', '/admin', '/worker', '/profile'];
+const protectedPaths = ['/dashboard', '/admin', '/worker', '/profile', '/shop-admin'];
 
 // Define paths that are public (redirect logged-in users away from these)
 const publicPaths = ['/login', '/signup'];
@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 2. Redirect Logic
-  
+
   // Scenario A: Unauthenticated user tries to access protected route
   if (isProtected && !isValidToken) {
     return NextResponse.redirect(new URL('/login', request.url));
@@ -44,12 +44,17 @@ export async function middleware(request: NextRequest) {
     // Redirect to their specific dashboard based on role
     if (userRole === 'admin') return NextResponse.redirect(new URL('/profile', request.url));
     if (userRole === 'worker') return NextResponse.redirect(new URL('/profile', request.url));
+    if (userRole === 'shop_admin') return NextResponse.redirect(new URL('/profile', request.url));
     return NextResponse.redirect(new URL('/profile', request.url));
   }
 
   // Scenario C: Role-based protection (Optional but recommended)
   if (pathname.startsWith('/admin') && userRole !== 'admin') {
-     return NextResponse.redirect(new URL('/profile', request.url)); // Unauthorized
+    return NextResponse.redirect(new URL('/profile', request.url)); // Unauthorized
+  }
+
+  if (pathname.startsWith('/shop-admin') && userRole !== 'shop_admin') {
+    return NextResponse.redirect(new URL('/profile', request.url)); // Unauthorized
   }
 
   return NextResponse.next();

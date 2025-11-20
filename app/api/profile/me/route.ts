@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth'; 
+import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
@@ -9,10 +9,47 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const user = await prisma.users.findUnique({
-    where: { id: userPayload.userId },
-    select: { id: true, name: true, role: true }
-  });
+  const userId = userPayload.userId;
+  const role = userPayload.role;
+
+  const queryOptions: any = {
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      phone_number: true,
+      role: true,
+      created_at: true,
+      user_addresses: {
+        select: { id: true, address_label: true, full_address: true },
+        take: 5 
+      },
+    }
+  };
+
+  if (role === 'worker') {
+    queryOptions.select.worker_profile = {
+        select: { driving_license: true, vehicle_number: true ,vehicle_rc : true}
+    };
+    
+    queryOptions.select.orders_fulfilled = {
+        select: { id: true, status: true, service_type: true },
+        orderBy: { created_at: 'desc' },
+        take: 10
+    };
+  }
+  
+  if (role === 'shop_admin') {
+    queryOptions.select.shops_managed = {
+        select: { id: true, name: true, type: true, address: true }
+    };
+  }
+
+  const user = await prisma.users.findUnique(queryOptions);
+
+  if (!user) {
+    return NextResponse.json({ error: "User profile not found" }, { status: 404 });
+  }
 
   return NextResponse.json({ user });
 }

@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 interface User {
   userId: string;
   phone: string;
-  role: "admin" | "consumer" | "worker";
+  role: "admin" | "consumer" | "worker" | "shop_admin";
 }
 
 interface AuthContextType {
@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 4. Redirect based on role
     if (decoded.role === "admin") router.push("/profile");
     else if (decoded.role === "worker") router.push("/profile");
+    else if (decoded.role === "shop_admin") router.push("/profile");
     else router.push("/profile");
   };
 
@@ -81,7 +82,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Custom Hook for easy access
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
