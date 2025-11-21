@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
   // Scenario B: Authenticated user tries to access public route (Login/Signup)
   if (isPublic && isValidToken) {
     // Redirect to their specific dashboard based on role
-    if (userRole === 'admin') return NextResponse.redirect(new URL('/profile', request.url));
+    if (userRole === 'admin') return NextResponse.redirect(new URL('/admin', request.url));
     if (userRole === 'worker') return NextResponse.redirect(new URL('/profile', request.url));
     if (userRole === 'shop_admin') return NextResponse.redirect(new URL('/profile', request.url));
     return NextResponse.redirect(new URL('/profile', request.url));

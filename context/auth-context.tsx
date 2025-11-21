@@ -5,6 +5,8 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 
+// for frontend components
+
 // Define the shape of your User object
 interface User {
   userId: string;
@@ -63,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // 4. Redirect based on role
-    if (decoded.role === "admin") router.push("/profile");
+    if (decoded.role === "admin") router.push("/admin");
     else if (decoded.role === "worker") router.push("/profile");
     else if (decoded.role === "shop_admin") router.push("/profile");
     else router.push("/profile");

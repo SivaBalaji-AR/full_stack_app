@@ -3,53 +3,58 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
-  const userPayload = await getAuthenticatedUser();
+  try{
+    const userPayload = await getAuthenticatedUser();
 
-  if (!userPayload) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const userId = userPayload.userId;
-  const role = userPayload.role;
-
-  const queryOptions: any = {
-    where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      phone_number: true,
-      role: true,
-      created_at: true,
-      user_addresses: {
-        select: { id: true, address_label: true, full_address: true },
-        take: 5 
-      },
+    if (!userPayload) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-  };
 
-  if (role === 'worker') {
-    queryOptions.select.worker_profile = {
-        select: { driving_license: true, vehicle_number: true ,vehicle_rc : true}
+    const userId = userPayload.userId;
+    const role = userPayload.role;
+
+    const queryOptions: any = {
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        phone_number: true,
+        role: true,
+        created_at: true,
+        user_addresses: {
+          select: { id: true, address_label: true, full_address: true },
+          take: 5 
+        },
+      }
     };
+
+    if (role === 'worker') {
+      queryOptions.select.worker_profile = {
+          select: { driving_license: true, vehicle_number: true ,vehicle_rc : true}
+      };
+      
+      queryOptions.select.orders_fulfilled = {
+          select: { id: true, status: true, service_type: true },
+          orderBy: { created_at: 'desc' },
+          take: 10
+      };
+    }
     
-    queryOptions.select.orders_fulfilled = {
-        select: { id: true, status: true, service_type: true },
-        orderBy: { created_at: 'desc' },
-        take: 10
-    };
-  }
-  
-  if (role === 'shop_admin') {
-    queryOptions.select.shops_managed = {
-        select: { id: true, name: true, type: true, address: true }
-    };
-  }
+    if (role === 'shop_admin') {
+      queryOptions.select.shops_managed = {
+          select: { id: true, name: true, type: true, address: true }
+      };
+    }
 
-  const user = await prisma.users.findUnique(queryOptions);
+    const user = await prisma.users.findUnique(queryOptions);
 
-  if (!user) {
-    return NextResponse.json({ error: "User profile not found" }, { status: 404 });
+    if (!user) {
+      return NextResponse.json({ error: "User profile not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ user });
+  }catch(error){
+    console.error("Error fetching user profile:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-
-  return NextResponse.json({ user });
 }

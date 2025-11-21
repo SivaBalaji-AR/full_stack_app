@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 
+// for backend api endpoints
+
 interface TokenPayload {
   userId: string;
   role: string;
