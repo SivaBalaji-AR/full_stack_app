@@ -1,0 +1,174 @@
+"use client";
+
+import { useAuth } from "@/context/auth-context";
+import { useState } from "react";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
+
+export default function SignupPage() {
+  const {login} = useAuth();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [shopName, setShopName] = useState("");
+  const [shopAddress, setShopAddress] = useState("");
+  const [shopType, setShopType] = useState("grocery");
+
+  const handleSignUp = async () => {
+    if(!name || !phone || !password) {
+      alert("Please fill all the required fields");
+      return;
+    }
+    const payload: any = {
+      name,
+      phone_number: phone,
+      password,
+      shop_name: shopName,
+      shop_address: shopAddress,
+      shop_type: shopType,
+    };
+
+    if(!shopName || !shopType) {
+    alert("Please fill all the shop admin details");
+    return;
+    }
+
+    try {
+      const response = await fetch("/api/shopAdmin/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong!");
+      }
+      console.log("Signup successful:", data);
+      login(data.token);
+
+    } catch (error: any) {
+      console.error("Signup error:", error.message);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 py-12">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
+          <CardDescription>
+            Choose your role and fill in the details to get started.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form>
+
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="name">Full Name</Label>
+                <Input 
+                  id="name" 
+                  placeholder="Full Name"
+                  value = {name}
+                  onChange={(e) => setName(e.target.value)}
+                  />
+              </div>
+
+              {/* Phone Number Field */}
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="Your 10-digit phone number"
+                  value = {phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+
+              {/* Password Field */}
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value = {password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  />
+              </div>
+
+                <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="shop_name">Shop Name</Label>
+                <Input
+                    id="shop_name"
+                    placeholder="Your Shop Name"
+                    value={shopName}
+                    onChange={(e) => setShopName(e.target.value)}
+                />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="shop_address">Shop Address</Label>
+                <Input
+                    id="shop_address"
+                    placeholder="Shop Address"
+                    value={shopAddress}
+                    onChange={(e) => setShopAddress(e.target.value)}
+                />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="shop_type">Shop Type</Label>
+                <RadioGroup
+                    value={shopType}
+                    onValueChange={setShopType}
+                    className="flex space-x-4 pt-2"
+                >
+                    <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="grocery" id="grocery" />
+                    <Label htmlFor="grocery">grocery</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="stationary" id="stationary" />
+                    <Label htmlFor="stationary">stationary</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="restaurant" id="restaurant" />
+                    <Label htmlFor="restaurant">restaurant</Label>
+                    </div>
+                </RadioGroup>
+                </div>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col w-full gap-4">
+          {/* Submit Button */}
+          <Button className="w-full"
+           onClick={handleSignUp}>Create Account</Button>
+
+          {/* Link to Login */}
+          <div className="mt-4 text-center text-sm">
+            Already have an account?{" "}
+            <Link href="/shopAdmin/login" className="underline">
+              Login
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}

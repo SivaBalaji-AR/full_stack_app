@@ -65,16 +65,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // 4. Redirect based on role
-    if (decoded.role === "admin") router.push("/admin");
-    else if (decoded.role === "worker") router.push("/profile");
-    else if (decoded.role === "shop_admin") router.push("/profile");
-    else router.push("/profile");
+    if (decoded.role === "admin") router.push("/admin/profile");
+    else if (decoded.role === "worker") router.push("/worker/profile");
+    else if (decoded.role === "shop_admin") router.push("/shopAdmin/profile");
+    else router.push("/user/profile");
   };
 
   const logout = () => {
     Cookies.remove("authToken");
     setUser(null);
-    router.push("/login");
+    router.push("/");
   };
 
   return (
