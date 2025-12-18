@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 4. Redirect based on role
     if (decoded.role === "admin") router.push("/admin/profile");
-    else if (decoded.role === "worker") router.push("/worker/profile");
+    else if (decoded.role === "worker") router.push("/partner/profile");
     else if (decoded.role === "shop_admin") router.push("/shopAdmin/profile");
     else router.push("/user/profile");
   };

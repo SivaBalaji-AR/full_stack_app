@@ -8,11 +8,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getAuthenticatedUser();
-
-  if (!user || user.role !== "admin") {
-    redirect("/admin/login"); 
-  }
 
   return (
     <SidebarProvider>
