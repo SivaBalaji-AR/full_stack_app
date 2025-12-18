@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
         const tokenPayload = {
             userId: user.id,
-            role: user.role,
+            role: "user",
             phone: user.phone_number
         };
 
